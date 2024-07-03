@@ -1,21 +1,24 @@
-# Wrapper Types, Generics, and Traits
-A **wrapper** is an object that encapsulates another data type.  In this section, we learn of Rust's two major wrapper types: **Options** and **Results**.
+# Null and Error-Handling Generics, and Traits
+In this part we explore 
+- Null value and Error-Handling through Option and Result types
+- Generics 
+- Traits
 
-**Generics** or **parametrized types** allows a ..
-
-**Traits** are Rust's version of an **class interface**: a set of methods and that an object or class  
-
+---
 ## Options
-An **option** is a special type of `enum` provided in the Standard Library.  It is a wrapper around "optional values".
+An **option** is a special type in Rust meant to handle "optional values", acting somewhat like a specialized `enum`.  
 
+In programming, sometimes a value might be a valid value or a null value.  The option type effectively acts as a protective layer between a value that may be null and the rest of the code, preventing certain errors from arising.
 ### 1. Using Options
-There are two variants of options (being an enum):
-- `Some(<value>)` : is a wrapper for an optional value
-- `None` : represents no value given
+There are two variants of options:
+- `Some(<value>)` : is a wrapper for the valid value
+- `None` : represents no value given (null)
 
-Use the `.unwrap()` method on an `Some` option to get the inner value, similar to destructuring tuples.
+Use the `.unwrap()` method on an `Some` option to get the valid value, similar to destructuring tuples.
 
-The type annotation is `Option<type>` where `type` is the type of the optional value.  For example: `Option<u16>`.
+The type annotation is `Option<type>` where `type` is the type of the optional valid value.  For example: `Option<u16>`.
+
+So to return 
 ### 2. If-Let and While-Let
 We want to check if a variable has an optional value (is `Some` and not `None`).  The straightforward solution is to use a *match-statement*.  For example, in the Rust-By-Example documentation:
 ``` Rust
@@ -34,7 +37,7 @@ match optional {
 };
 ```
 
-The shorthand for this is the `if let` statement:  
+Since this is so common, the shorthand for this is the `if let` statement:  
 ```Rust
 let optional_target = Some(target);
 
@@ -66,7 +69,7 @@ while let Some(inner_value) = optional_value {
 
 The loop ends when the destructuring to `None` occurs.
 
-When you `.pop()` a value from a vector, the value is wrapped in `Some`.  So you may need to `.unwrap()` the returned value from `.pop()`; in a `while let` you may also nest `Some`:
+When you `.pop()` a value from a vector, the value is wrapped in `Some`.  So you may need to `.unwrap()` the returned value from `.pop()`; in general, you can nest the destructuring of a `Some`:
 ```Rust
         while let Some(Some(integer)) = optional_integers.pop() {
             assert_eq!(integer, cursor);
@@ -76,7 +79,7 @@ When you `.pop()` a value from a vector, the value is wrapped in `Some`.  So you
 
 A `.pop()` on an empty vector returns `None`.
 ### 3. Partial Moves
-When we *destructure* a compound data type (like a `tuple` or `struct`), we perform what is called a **partial move**.
+When we *destructure* a compound data type (like a `tuple`,  `struct`, or `option`), we perform what is called a **partial move**.
 
 Take the following struct:
 ```Rust
@@ -89,7 +92,7 @@ let p = Point { x: 100, y: 200 };
 ```
 The variable `p` is the **parent variable** and we can call `x` and `y` **child variables**.
 
-As a review: between two simple variables, reassigning a value moves the *ownership* from one variable to another.  This occurs also when passing a variable to a function, as we saw before.
+As a review: between two simple variables, reassigning a value moves the *ownership* from one variable to another.  This also occurs when passing a variable to a function, as we saw before.
 
 The same thing happens when we move the ownership of a value from a *child variable* to another variable (such as when passing the child variable to a function).  For example:
 ```Rust
@@ -98,32 +101,32 @@ consume(p.y); // ownership of p.y is moved into consume()
 
 The *parent variable* `p` is now no longer valid because a "part" (the child variable `y`) is invalid; however, references to other parts (child variable `x`) are still possible.  Moving the ownership of "part" of a compound data type variable is called a **partial move**.
 
-Warning: unfortunately in this exercise, we have a parent variable named `y` and a child variable also names `y`.
+> [!warning]
+> Unfortunately, in this exercise we have a parent variable named `y` and a child variable also names `y`.
 
 In this exercise, a partial move occurs from `Point y` to `Point p` during the *destructuring* in the match arm `Some(p) => ...` of match-case.  The parent variable `y` holds a compound data type (`Point`), so it cannot be moved "as a whole" to `p`.  Instead, what is happening is that the child variables `y.x` and `y.y` are being moved to ownership by `p.x` and `p.y`.
 
-We want to use `Point y` later, so we want to let `p` borrow the values from `y` in the match-arm.  There are two problems:
-1. Match-cases by default move ownership (also described as *consuming*).
-2. The match case is *destructuring*, which is an instance of *pattern matching*.
+We want to use `Point y` later, so we want to let `p` borrow the values from `y` in the match-arm.  
 
-We can't use `&p` in the match-arm because that means we expect to pattern a match against a *reference* to a `Point` object; instead we just want to match to a `Point` object but not move its ownership.  A subtle point and confusing, I know!
+But there is a problem: we can't use `&p` in the match-arm because that means we expect to pattern-match a *reference* to a `Point` object (`&Point`); instead we just want to match to a `Point` object but not move its ownership.
 
-The solution is to use the keyword `ref`: used in a pattern match (like destructuring in a match-arm), it means to match the object but then use it as a borrow.
+Just for this situation, Rust introduces a new keyword: `ref`.  When used in a pattern match, it means to match the object but then use it as a borrow.
 
 So `Some(ref p) => ...` means to match to `Some(p)` but make `p` borrow the value from whatever it matched against.
 
-I realize this section is probably not clear; I'll try to tidy it up in the future.
+---
 ## Error Handling
-The Option type is a special enum to handle optional values.  We also have the type **Result**, a special enum to handle *error values*.
+Rust's **Result** type is used for handling error values, operating similar to an enum.
 
+In programming, a value might be valid or it might return an error value.  The Result type acts as a protective layer between the rest of the code and any errors that might arise.
 ### 1. Result Type
-The Option type has two variants: `Some(<value>)` and `None`.  The **Result** type has two variants:
+The **Result** type has two variants:
 - `Ok(<value>)`: the `value` when returning a non-error.
 - `Err(<error-value>)`: the `error-value` when an error occurs.  In this particular exercise, we will be returning a `String` error messages.
 
 The type annotation is: `Result<T, E>` where `T` and `E` are generic type parameters for the `Ok` and `Err` variant, respectively.  They can be the same type, as in this exercise (both `String`).
 ### 2. Matching Errors
-The Rust philosophy with errors: since most errors are not serious enough to stop the program, a program should be able to respond to an error instead.
+The Result type offers more utility to handle errors compared to the Options type.
 
 In the exercise, the method `.parse::<i32>()` attempts to parse argument `item_quantity` as a number of type `i32`.  
 ```Rust
@@ -131,7 +134,7 @@ In the exercise, the method `.parse::<i32>()` attempts to parse argument `item_q
 ```
 If successful, then the value of variable `qty` is the number wrapped in `Ok`.  Otherwise, `qty` is `Err(ParseIntError)`. 
 
-To figure out whether `qty` holds `Ok` or `Err`, the straightforward solution is to use a match statement and destructure either the value or error.
+To figure out whether `qty` holds `Ok` or `Err`, the straightforward solution is to use a match statement:
 ```Rust
     match qty {
         Err(e) => Err(e),
@@ -147,15 +150,15 @@ This checking is so common that Rust provides a shortcut with the `?` operator:
 ```
 
 Placing `?` after a method/function that returns a `Result` does two things:
-- If the method returns `Err(<some_error>)`, this error is immediately returned by the function `total_cost()`.
-- If the method returns `Ok(<some_value>)`, then the operator returns `Ok(<some_value>).unwrap()` i.e. just the inner value `<some_value>`.
+- If the method returns `Err(<some_error>)`, this error is immediately returned by the parent function (in this case `total_cost()`).
+- If the method returns `Ok(<some_value>)`, then the operator returns `Ok(<some_value>).unwrap()` i.e. just the inner valid value `<some_value>`.
 
 ### 3. Return Types
-The `main()` function in Rust is like any other function: it can take arguments and -importantly for this exercise- give return values.
+The `main()` function in Rust is like any other function: it can take arguments and give return values.
 
-**Void functions** are those that on success return no value or "nothing".  In Rust, a void function returns `()`, the empty tuple; we don't need to indicate this return type by default, which is what we were doing in the previous exercises.  
+**Void functions** are those that on success return no value or "nothing".  In Rust, a void function returns `()`, the empty tuple; we don't need to indicate this return type by default, as in the previous exercises.
 
-But in this exercise, where the `main()` function should return "nothing" on success or throw `ParesIntError`, the return type needs to be: 
+However, in this exercise, where the `main()` function should return "nothing" on success or throw `ParesIntError`, the return type needs to be: 
 ```Rust
 main() -> Result<(), ParseIntError>
 ```
@@ -165,26 +168,33 @@ To stress: without any return statements or expressions, a function will return 
 return Ok( () );
 ```
 
-### 4. Multiple Errors as Enum
-What if we want to return multiple types of errors?  The return type `Result<T, E>` only allows specifying one error type `E`.  One solution: if we let `E` be a user-defined error `enum`, then we can return different error types as variants of that enum.
+### 4. Multiple Errors with an Enum
+What if we want to return multiple types of errors?  The return type `Result<T, E>` only allows specifying one error type `E`.  
+
+One solution: if we let `E` be a user-defined error `enum`, then we can return different error types as variants of that enum.
 
 In this exercise, we want to check if `value` passed to the function `new()` is positive, zero, or negative.
 
 We are also introduced to the keyword `as` being used to **cast between types**: `value as u64` where `value` is of type `i64`.  Without going to much into details here, this only works for primitive types and pointers; `String` and `Vec` types need to use special methods `From` and `Into` (these are called *traits* and we introduce them next section). 
 
 ### 5. Multiple Errors with Boxes/Traits
-A more general way to return multiple data types is with **Boxes** and **Traits**, Rusts's equivalent of *generic types* and *interfaces*.  We'll learn more about these in depth later.
+A more general way to return multiple data types is with **Boxes** and **Traits**, Rust's equivalent of *generic types* and *interfaces*.  We'll learn more about these in depth later.
 
 We can represent a generic type by the syntax `Box<dyn <trait>>` meaning an object type that implements the `<trait>` interface.  The keyword `dyn` is short for *dynamic dispatch* and indicates the following word `<trait>` refers to a *trait object* (interface).
 
 In this exercise, the `main()` function needs to return two possible error types: `ParseIntError` and the user-defined `CreationError`.  Both are *propagated* with the `?` operator.  As the hint points out, all Rust errors implement the `std::error:Error` *trait* (interface).  So the generic error type in Rust is `Box<dyn std::error::Error>`.
 
-As a passing note, what the `?` operator is doing is using `std::From::from` to convert passed errors into type `Box<dyn std::error::Error>`.
+> [!Note]
+> As a passing note, what the `?` operator is doing is using `std::From::from` to convert passed errors into type `Box<dyn std::error::Error>`.
 
 ### 6. Mapping Errors
 Rather than further propagate an error, it may be preferred to *handle* the error within the program.  Rust let's you *map* an error to some handling function through `map_err()`; I think of this similar to try-catch blocks in Java and C++.
 
-In this exercise, we need to handle two separate errors that may arise at different points in the function: attempt to parse a value as a valid integer, then attempt to return the value as a positive-integer.  To handle an error in this exercise, there are few possible solutions.
+In this exercise, we need to handle two separate errors that may arise at different points in the function: 
+- attempt to parse a value as a valid integer
+- then attempt to return the value as a positive-integer.  
+
+To handle an error in this exercise, there are few possible solutions.
 
 First, the most straightforward is to use a match case:
 1. Change the type annotation for `x` to `Result<i62, ParseIntError>`; or remove the type annotation for implicit typing.
@@ -205,22 +215,23 @@ First, the most straightforward is to use a match case:
 ```
 
 The second solution is to map `ParseIntError` to `ParseInt()` after `.parse()` by chaining `.map_err()`.  To make things even more simpler, we can use the `?` operator. 
-// TODO: more details
+
 ```Rust
 fn parse_pos_nonzero(s: &str) -> Result<PositiveNonzeroInteger, ParsePosNonzeroError> {
-    // TODO: change this to return an appropriate error instead of panicking
-    // when `parse()` returns an error.
     let x: i64 = s.parse().map_err(ParsePosNonzeroError::ParseInt)?;
     
     PositiveNonzeroInteger::new(x).map_err(ParsePosNonzeroError::from_creation)
 }
 ```
 
+---
 ## Generics
 In Rust, **generics** enables generalizing types and functions.
 
 ### 1. Generics with Vectors
-We already encountered generics when using **vectors**.  Rust's vectors are defined to take generic types; in the type annotation we just need to fill in what specific type we want the vector to hold.
+We already encountered generics when using **vectors**.  Rust's vectors are defined to take generic types; in the type annotation we just need to fill in what specific type of elements we want the vector to hold.
+
+For example: `Vec<&str>`
 ### 2. Using Generics
 Generics work very similarly to generic types in Java and C++.  If you want to use a generic type `T`, you declare the generic type in the function signature, implementation signature, or struct signature as `<T>`:
 
@@ -238,8 +249,9 @@ impl <T> Wrapper <T> {
 
 Note the second `<T>` after the struct name in the implementation definition.  You can think of this as passing the `T` declared by `impl` being passed to the struct `Wrapper`.
 
+---
 ## Traits
-A **trait** is a collection of methods and serves as Rust's version of an *interface* in Java or C++ (where they are called abstract classes).
+A **trait** is a collection of functions and serves as Rust's version of an *interface* (or abstract class) in Java or C++.
 
 ### 1. Defining Traits
 Similar to user-defined structs, we define a trait in a `trait` block, which contains all the function signatures of the trait/interface.
@@ -259,15 +271,21 @@ impl AppendBar for String {
 }
 ```
 
+There are two types of functions with traits:
+- **methods** which operate on items, or *instances*, of the type and have the syntax `instance.method()`.
+- **associated functions** which are associated with the *type* itself and have the syntax `type::func()`. 
+
+Methods pass the `self` argument to the function signature, which is used to refer to the instance itself, and may return the instance as `Self`; associated functions do not pass `self` in the function signature.
 ### 2. Defining Traits for Specific Types
 Last exercise required implementing `AppendBar` for `String` types.  Now we do the same for a vector of strings, which requires a different definition of `append_bar()`.  
 
-The function body can be different across different types, but so can the parameters, to a degree.  For this particular exercise, the vector needs to be mutable, so the parameter can be `mut self` and it still works okay.
+The function body can be different across different types, but so can the parameters, to a degree.  For this particular exercise, the vector needs to be mutable, so the parameter can be `mut self` in the implementation block, even though in the trait block the parameter is simply `self`, and it still works.
+### 3. Default Trait Methods
+Rather than implementing each method for each type that uses a trait, you can define a **default method** that any type implementing the trait can use.  
 
-### 3. Default Methods
-Rather than implementing each method for each type that uses a trait, you can define a **default method** that the type will use.  The default method is defined in the definition of the trait itself.
+The default method is defined in the definition of the trait itself.  Since the definition won't have the particulars about the type implementing the trait, the default method is restricted in what can be defined.  
 
-Since the definition won't have the particulars about the type implementing the trait, the default method is restricted in what can be defined.  In this exercise, even though `SomeSoftware` and `OtherSoftware` have their own `version_number` field, the default method just returns the string `"Some information"`.
+In this exercise, even though `SomeSoftware` and `OtherSoftware` have their own `version_number` field, the default method just returns the string `"Some information"`.
 
 ### 4. Parameters with Traits
 Rather than a concrete type annotation, we can denote a type as implementing a specific interface/trait.  For example:
@@ -305,4 +323,4 @@ impl <T : std::fmt::Display> ReportCard <T> {
 }
 ```
 
-In the exercise, change the types were necessary to the correct generic type.
+In the exercise, change the types as necessary to the correct generic types.

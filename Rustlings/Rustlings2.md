@@ -3,6 +3,8 @@ In this part, we explore:
 - Primitive Data Types
 - Data Types from the Standard Library
 - Modules
+
+---
 ## Primitive Types
 Rust has a few **primitive types**; these are *built-in* to Rust.  Later we'll learn types that are provided by the **Standard Library**.
 
@@ -21,7 +23,7 @@ As said before, these do not type cast into integers, as in C++.
 
 In this exercise you can experiment with different characters.
 ### 3. Arrays
-**Arrays** are one of Rust's primitive **compound types**: objects that hold other elements.  Arrays collect elements of the *same type*.  Arrays are of a *fixed size*.  To get the length of an array, use the method `.len()`.   Arrays (and all Rust container types) are *zero-indexed*.
+**Arrays** are one of Rust's primitive **compound types**: objects that hold other elements.  Arrays collect elements of the *same type* and are of a *fixed size*.  To get the length of an array, use the method `.len()`.   Arrays (and all Rust container types) are *zero-indexed*.
 
 The **type annotation** for arrays is: `[<element-type>; <number-of-elements>]`
 
@@ -38,13 +40,14 @@ For a mutable array, you can change the value of an element like in C, Python, e
 ```Rust
 let mut x = [0, 1, 2, 3];
 x[0] = 100;
+// x = [100, 1, 2, 3]
 ```
 ### 4. Slices
 Here we first come across Rust's unique concepts of **ownership** and **borrowing**.  We'll cover them in greater detail later on.
 
 A **slice type** refers to a contiguous sequence of objects, all of the same type.  The slice type consists of a pointer to the first object and the size of the object's type.  The difference from an array is that the size of a slice type is determined *at runtime* and are typically *unowned*, meaning they are references to parts of compound types.
 
-The *type annotation* for a slice is `&[T]`.  You can think of it as an "un-owned array", for now.
+The *type annotation* for a slice is `&[T]`. 
 
 In this exercise, a slice is used to refer to a sub-array of an array.  For example:
 ```Rust
@@ -57,7 +60,7 @@ let nice_slice = &a[1 .. 4];
 
 The `&` symbol is Rust's **reference operator**, which gets or "borrows" the value of a variable.  This is the same as C's reference operator (`&`), which gets the memory address of a variable.
 
-Here `&a[1 .. 5]` means "go to the location" of `a` and get the "first up-to fifth" objects of the sequence to which `a` "points": so this slice contains four objects.
+Here `&a[1 .. 4]` means "go to the location" of `a` and get the "first up-to fifth" objects of the sequence to which `a` "points"; this slice contains four objects (remember Rust uses zero-indexing).
 ### 5. Tuples
 A **tuple** is a Rust's other primitive **compound type** that consists of elements that may be of *different* types.  Like arrays, tuples are of fixed size.
 
@@ -75,8 +78,9 @@ let (name, age) = my_tuple;
 // age == 3.5
 ```
 
-### 6. Indexing
-Elements in an array or tuple may also be accessed by indexing.  Indexing for a tuple is different from that of indexing for an array.
+In the above, `(name, age)` is the **pattern** used to match the onto the tuple.
+### 6. Indexing Arrays and Tuples
+Elements in an array or tuple may also be accessed by indexing.  The syntax for indexing a tuple is different from that of indexing for an array:
 
 - For an array: `someArray[<index>]`.  
 - For a tuple: `someTuple.<index>`.  
@@ -84,10 +88,13 @@ Elements in an array or tuple may also be accessed by indexing.  Indexing for a 
 For example:
 ```Rust
 let numbers = (1, 2, 3);
-let second = numbers.1; // second = 2
+let second = numbers.1; 
+
+// second = 2
 ```
 
-## Vectors
+---
+## Vecs
 A **vector** can be thought of as a *dynamically sizable* array.  As such, Rust's vectors are stored on the *heap* while arrays are stored on the *stack*.  Vectors are not a primitive data type, but instead provided by Rust's Standard Library.
 ### 1. Instantiating Vectors
 Declare a vector with `Vec::new()` and add elements with the `push()` method.  Make sure that the vector is *mutable* in order to push elements.  As an example:
@@ -113,16 +120,14 @@ Remember a reference is a "pointer" that holds the "memory address" of a value. 
 
 Note that we are *mutating* the original vector `v`.
 #### Mapping
-Here, `.iter()` returns an iterator but `.map()` takes a reference `element` and maps it to a new value in the iterator.
+Here, `.iter()` returns an iterator but `.map()` takes a reference `element` and maps it to a new value in the iterator.  The new values are then re-formed back into a vector with the `.collect()` method.  Here, this returns a *new* vector instead of mutating the original.
 
-As the hint notes, with mapping you don't need explicitly set the new value to `element`, you just need to give the new value (as an expression or return value):
+The argument to `.map()` is an anonymous function, where `element` is the parameter name and the body returns the newly mapped value.  So, as the hint notes, with mapping you don't need explicitly set the new value to `element` or dereference.
 ```Rust
-*element * 2
+return element * 2;
 ```
 
-You don't actually need to dereference `element`; details about mapping are covered in the iterators section.
-
-Note the iterator now needs to be reformed into a vector with the `.collect()` method.  Here, this returns a *new* vector.
+---
 ## Move Semantics
 These exercises dive into the concepts of **ownership** and **borrowing**; together they play important roles in **move semantics**, part of Rust's unique memory management schema (in lieu of a traditional garbage collector).
 
@@ -132,21 +137,25 @@ There is only one owner of a value at a time.  Ownership of a value may be *move
 ```Rust
 let a = 10;
 let b = a;
+
+// `10` is moved to `b`
 // `b` now owns `10` and `a` is an invalid variable (holds nothing)
 ```
 
 ### 1. Moving Variables
+When a variable is passed into a function, the ownership of its value is moved into the function.
+
 Here is a first-pass understanding of what is happening in this exercise:
-1. The vector in variable `vec0` is *moved* to argument `vec` in the scope of `fill_vec()`.   
+1. When `vec0` is passed to `fill_vec()`, the vector in variable `vec0` is *moved* to argument `vec` in the scope of `fill_vec()`.   
 	- Now `vec0` is invalid.  Try adding `println!("{}", vec0[0])` at the end of `main()` to see an error message.
-2. The vector is *moved* from the argument `vec` to newly declared variable `vec` in the body.
-	- The argument `vec` is not invalid.
+2. In the body, the vector is *moved* from the argument `vec` to newly declared variable `vec` in the body.
+	- The argument `vec` becomes shadowed by the new variable `vec`.
 	- Since we want to change the vector, the new `vec` in the body needs to be declared as *mutable* with `mut`.
 3. The vector is mutated: a new value is pushed onto the vector.
 4. `vec` is *returned* from the function (i.e. placed to the outside scope) and *moved* to `vec1`.  
 	- At this point, only `vec1` is a valid variable.
 
-### 2. Borrowing
+### 2. Borrowing Variables
 In this exercise, we want to keep `vec0` valid in the scope of `main()` after "moving" its value into `fill_vec()`.
 
 Similar to *pass-by-reference* in C/C++, a different variable or scope can **borrow** a value.  The *owner* essentially allows another variable, the *borrower*, to access its owned value, but the borrower *cannot free* the value; when the borrower goes out of scope, the value remains valid with the owner.  A borrowed value, or **reference**, is prefixed by the symbol `&`.   We already saw this when introducing slice types.
@@ -169,13 +178,13 @@ let vec = vec.clone();
 In summary:
 1. The *reference* to `vec0` is moved into `fill_vec()` as `vec`, which is now essentially a vector *pointer*, borrowing `vec0`'s value.
 2. The method `.clone()` is used to copy the vector pointed-to by the argument `vec` into the newly declared vector variable `vec` in the body.
-	- We can think of `let vec` as declaring a new owner.
+	- We can think of `let vec` as instantiating a new owner with the copied vector.
 3. `vec` is moved out from the scope of `fill_vec()`.
 4. The ownership of `vec`'s value is moved to `vec1`.
 	- At this point, only `vec0` and `vec1` are valid variables: two different owners.
 
-### 3.  Moving values into Mutable Variables
-When we pass a variable into a function, we are really moving the ownership from the passed variable to the *parameter* variable.  In the previous two exercises, this was simply `vec`.  Hopefully that's not too confusing.
+### 3. Moving values into Mutable Variables
+When we pass a variable into a function, we really are moving the ownership from the passed variable to the *parameter* variable.  In the previous two exercises, this was simply `vec`.  Hopefully that's not too confusing.
 
 In the first exercise of this section, we saw that we could move an immutable value to a mutable variable:
 ```Rust 
@@ -191,28 +200,29 @@ This can be thought of as a shorthand to the first exercise.
 ### 4. Moving values out of Functions
 This exercise illustrates that returning a value from a function is really moving that value out from the function's scope.
 
-First, change the function call to take no arguments.  Then *create* a new vector in the scope of the function.  When the new vector is returned, it is being moved out from the function's scope.
+To complete this exercise: first, change the function call to take no arguments.  Then *create* a new vector in the scope of the function.  When the new vector is returned, it is being moved out from the function's scope.
 
 ### 5. Mutable Borrows
 A *borrow* (or reference), as we saw previously, lets a variable (the *borrower*) access the value of another variable (the *owner*).  
 
 A **mutable borrow** lets the borrower access the owner's value and *modify* that value.  I think of it as "asking" the owner to change the value.  Note the owner must be declared as a mutable variable with `mut`.
 
-There can only be *one mutable borrow* of an owned value at a time.
-
-A borrower ends it borrowing the last time it is used in its scope.
+- There can only be *one mutable borrow* of an owned value at a time.
+- A borrower ends it borrowing the last time it is used in its scope.
 
 This exercise asks to rearrange the *lifetimes* of variables so there is only one mutable borrow of `x` at a time.  
 
-### 5. Function Signatures
+### 6. Function Signatures
 This exercise brings together the lessons of this section, but highlights that Rust, unlike C/C++, strictly differentiates between a value and a reference to that value.
 
-As an aside: functions in Rust are technically pass-by-value, but the way ownership works means that borrowing (passing the address of a variable) operates much like pass-by-reference in C/C++.
+> [!Aside] 
+> Functions in Rust are technically pass-by-value, but the way ownership works means that borrowing (passing the address of a variable) operates much like pass-by-reference in C/C++.
 
-In this exercise, we want `get_char()` to take a reference to `data`, so that `data` remains valid (in scope) to be moved into `string_uppercase()`.
+In this exercise, we want `get_char()` to take a reference to `data`, so that `data` remains valid (in scope) to be passed into `string_uppercase()`.
 
-To solve this exercise: first, the function signature and call of `get_char()` needs to borrow `data`: this is done by adding `&` at the appropriate places.  Similarly, the `&`'s need to be removed from the signature and call of `string_uppercase()`.
+To solve this exercise: first, the function signature and call of `get_char()` needs to borrow `data`: this is done by adding `&` at the appropriate place.  Similarly, the `&`'s need to be removed from the signature, definition, and call of `string_uppercase()`.
 
+---
 ## Structs
 **Structs** are Rust's **user-defined data types**.  Similar to tuples, they group related elements called **fields** together.  Unlike tuples, the elements of a struct are *named types*.
 
@@ -243,8 +253,7 @@ let green = ColorClassicStruct{red:0, green:255, blue:0};
 let green = ColorTupleStruct(0,255,0);
 let unit_like_struct = UnitLikeStruct;
 ```
-
-
+Note that a new declaration of a struct cannot end with a comma in its last field.
 #### 2. Copying Structs
 We can create a new struct by copying the fields from an existing struct.
 ```Rust
@@ -255,7 +264,6 @@ let your_order = Order {
 	..order_template
 };
 ```
-Note that a new declaration of a struct cannot end with a comma in its last field.
 
 The shorthand to fill the rest of the fields with copies from an existing struct is: 
 ```Rust
@@ -273,9 +281,9 @@ fn get_fees(&self, cents_per_gram: u32) -> u32 {
 ```
 
 ## Enums
-**Enums** are another user-defined type, similar to enums in C/C++ or algebraic types in some functional languages.  An enum represents a *range* of *possible* values (enumerations).  The classic example is an enum representing the day of the week.
+**Enums** are another user-defined type, similar to enums in C/C++ or algebraic types in some functional languages.  An enum represents a *range* of possible values (enumerations).  The classic example is an enum representing the day of the week.
 ### 1. Defining an Enum
-Defined as the type `enum` that takes the different possible values:
+We use the keyword `enum` to declare an enum that takes the different possible values:
 ```Rust
 enum Day {Monday, Tuesday, Wednesday, Thursday, Friday,}
 ```
@@ -293,6 +301,7 @@ enum Message {
 
 Note that we must wrap the type in parentheses unless it is of a compound type (struct or tuple in the previous example).
 
+Enums can also have methods.  As with structs, these methods are defined in a separate `impl` block.
 ### 3. Using Enums
 This exercise stresses an enum value is really a stand-in for another data structure.
 
@@ -309,9 +318,9 @@ enum Message {
 // ...
 
 match message {
-	Message::Move (pt) => self.move_position(pt),
-	Message::Echo (msg) => self.echo(msg),
 	Message::ChangeColor (r,g,b) => self.change_color( (r,g,b) ),
+	Message::Echo (msg) => self.echo(msg),
+	Message::Move (pt) => self.move_position(pt),
 	Message::Quit => self.quit(),
 }
 ```
@@ -325,23 +334,32 @@ change_color( (r, g, b) ),
 - `String` which is like strings in C/C++: a wrapper or object around the character array.
 - `&str` which is called the **string slice**.  It is also called the **string literal**, to match other languages, but it is itself a special subset of the *slice type*, which we met in the primitive data types section.
 
-### 1. Converting between Types
-A simple string slice, or string literal, is given in double quotations: `"blue"`.
+> [!aside] `&str` is the Borrowed Form
+> Technically, `&str` is the *borrowed form* of the string slice type `str`.  The former notation is often used because string literals are un-ownable/immutable by design, but you'll encounter `str` in certain situations (like in type conversions).
 
-There are a few ways to convert a string slice `&str` to a `String` object.  For a string literal `"blue"`:
+### 1. Converting between Types
+A simple **string slice**, or string literal, is given in double quotations: `"blue"`.
+
+There are a few ways to convert a string slice `&str` to a **String** object (`String`).  For a string literal `"blue"`:
 - `"blue".to_string()` 
 - `String::From("blue")`
 - `"blue".to_owned()`
 - `"blue".into()`
 
-The first two are preferred; the last two give the result we want here, but do something differently, which we won't get into right now.
+The first two are preferred; the last two give the result we want here, but do something differently, based on ownership and automatic type conversion, which we won't get into right now.
 
 The hint mentions that string slices have *static lifetimes*, meaning they are "hard-wired" into the code (static variables in C/C++, as part of the code section) and thus *immutable*.
-
 ### 2. String References
-A reference to a string is a string slice.  In other words, when we borrow a value from a `String` variable, we are borrowing a value of type `&str`.
+A reference to a String is *not* the same as a string slice.  In other words, `&String` and `&str` are not the same.  However, confusingly, they can often be used interchangeably.  You can test this by changing the function signature for a `is_a_color_word()` to accept `attempt` as of type either `&String` or `&str`.  What's actually happening is something called **reference conversion** or **implicit dereference coercion**, which is beyond this course.
 
-In more other words, `&String` and `&str` are the "same".  You can test this by changing the function signature for a `is_a_color_word()` to accept `attempt` as of type either `&String` or `&str`.  I say "same" because what's actually happening is something called **reference conversion** or **implicit dereference coercion**, which is beyond this course.
+Best practice is to be clear: use `&String` when borrowing from a string and `&str` when using a (standalone) string literal.
+
+For example, the following won't work because the vector takes elements of type `&String` but is being pushed a `&str`:
+``` Rust
+let mut new_vec : Vec<&String> = Vec::new();
+new_vec.push("Dinosaurs");
+```
+
 ### 3. Methods on Strings
 You can *chain* methods, like in Java or Javascript.
 
@@ -358,18 +376,22 @@ To concatenate strings, there are several options.  Using `push_str()` may be te
 ```
 yields a `String` with the `<string slice>` appended.
 
-There is also a macro called `format!` that allows for combining strings together.
+There is also a macro called `format!` that allows for combining strings together:
+``` Rust
+format!("{} World!", "Hello");
+// Returns the String "Hello World!"
+```
 
 In the exercise, remember to convert the results of these methods to the `String` type (probably with `to_string()`).
 
-### 4. Mini-Quiz
+### 4. Strings Mini-Quiz
 This exercise simply tests if you can recognize the difference between values of type `String` and `&str`.
 
+---
 ## Modules
-**Modules** are Rust's way to package code together as a unit.  They are very much like namespaces in C++, modules in Scheme/Racket, or packages in Python.
+**Modules** are Rust's way to organize code together as a unit.  They are very much like namespaces in C++, modules in Scheme/Racket, or packages in Python.
 ### 1. Public Attribute
 A **module** is declared with the keyword `mod` followed by the name and curly-braces that demarcate the module.  By default, everything in a module is *private*: inaccessible to anything outside the scope of the module.  To make something *public*, use the `pub` keyword.
-
 ### 2. Using Namespace
 You can nest modules within each other.
 
@@ -381,14 +403,18 @@ You can import a module or part of a module with a new particular name, similar 
 
 Rather than `self`, another option is `super`, which means to use the module above the current level (similar to `..` in navigating file-systems).
 ### 3. Standard Library
-The standard library itself can be imported as a module, with particular modules nested within.  You can import specific functions or values.  This exercise introduces two of them:
+Parts of the standard library itself can be imported as a module, with particular modules nested within.  You can import specific functions or values.  This exercise introduces two of them:
 - `std::time::SystemTime` : a function.
 - `std::time::UNIX_EPOCH` : a value.
 
 Declare their use at the beginning of your source, as in most languages.
 
+A list of modules from the standard library can be found at:
+> https://doc.rust-lang.org/std/index.html#modules
+
+---
 ## Hash Maps
-A **hash map** is a sort of *associative array* and a very useful data structure.  In Python they are called dictionaries.  In JavaScript, objects serve as a sort of hash map.
+A **hash map** is a sort of *associative array* and a very useful data structure.  In Python they are called dictionaries and unordered maps in C++.  In JavaScript, objects serve as a sort of hash map.
 
 ### 1. Creating and Using Hash Maps
 Hash maps are provided by the Standard Library in `std::collections::HashMap`.
@@ -414,7 +440,7 @@ basket.entry(fruit).or_insert(1);
 ### 3. Mini-Quiz
 The exercise uses knowledge from the previous exercises.
 
-As a hint: you can break up chained methods onto individual lines, or arguments into individual lines; like in C/C++, white-space is ignored/compressed by the Rust compiler.
+As a hint: you can break up chained methods onto individual lines, or arguments into individual lines as in JavaScript.  Like C/C++, white-space is ignored/compressed by the Rust compiler.
 
 Remember the value is the struct `Team`.
 
@@ -432,13 +458,12 @@ Here's a working example:
 ```
 
 ## Quiz 2
-When using a module in the same source-file, use the `super::` keyword to denote the file as the top-level module.
+Some hints:
 
-Because a match-case is an expression, it can be used as the value in variable initialization.
-
-The method `.to_uppercase()` returns a `String`, but `.trim()` returns a `&str`.  Note the variable `string` in the loop is of type `&str`.
-
-The method `<string slice>.repeat(<size:u32>)` returns a `String` of `<string slice>` repeated `<size>` times. 
+- When using a module in the same source-file, use the `super::` keyword to denote the file as the top-level module.
+- Because a match-case is an expression, it can be used as the value in variable initialization.
+- The method `.to_uppercase()` returns a `String`, but `.trim()` returns a `&str`.  Note the variable `string` in the loop is of type `&str`.
+- The method `<string slice>.repeat(<size:u32>)` returns a `String` of `<string slice>` repeated `<size>` times. 
 
 Here's part of the working solution, as an example:
 ```Rust
@@ -464,8 +489,7 @@ mod my_module {
 }
 ```
 
-An interesting note: using `.into()` instead of `.to_string()` or `.to_owned()` will result in an error; earlier we mentioned that `.into()` doesn't exactly convert a string slice to a `String`.
-
-Also note that we need to use the reference operator to convert `"bar".repeat(*size)` into a string slice (as required by string concatenation).
-
-Also note that `*size` indicates that `size` is actually a pointer we need to dereference.
+Some notes:
+- Using `.into()` instead of `.to_string()` or `.to_owned()` will result in an error; earlier we mentioned that `.into()` doesn't exactly convert a string slice to a `String`.
+- We need to use the reference operator to convert `"bar".repeat(*size)` into a string slice (as required by string concatenation).
+- Note that `*size` indicates that `size` is actually a pointer we need to dereference.
