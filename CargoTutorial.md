@@ -10,10 +10,10 @@ This is fine for small projects, but for larger or more complex projects, simply
 ## Cargo Overview
 We can group the source files of a project together with a **manifest** that describes the project: this abstraction is called **package**.
 
-**Cargo** is Rust's package manager.  We can abstract the tedium of building projects to Cargo and 
+**Cargo** is Rust's package manager.  We can abstract the tedium of building projects to Cargo.
 
 What Cargo can do:
-- Corectly invoke rustc (or another tool)
+- Correctly invoke rustc (or another tool)
 - Resolve dependencies (fetch and build necessary library crates)
 - Set up project managment tools
 
