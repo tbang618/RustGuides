@@ -58,9 +58,11 @@ let nice_slice = &a[1 .. 4];
 // nice_size == [2, 3, 4]
 ```
 
-The `&` symbol is Rust's **reference operator**, which gets or "borrows" the value of a variable.  This is the same as C's reference operator (`&`), which gets the memory address of a variable.
+The `&` symbol is Rust's **reference operator**, which gets or "borrows" the value of a variable.  This is *not* the same as C's reference operator (`&`), which gets the memory address of a variable.
+It might be better to think of Rust's reference operator as returning a smart pointer to the owned value.
 
-Here `&a[1 .. 4]` means "go to the location" of `a` and get the "first up-to fifth" objects of the sequence to which `a` "points"; this slice contains four objects (remember Rust uses zero-indexing).
+Here `&a[1 .. 4]` means "go to the location" of `a` and get the "first up-to fourth" objects (remember Rust uses zero-indexing) of the sequence `a`; this slice contains four objects .
+
 ### 5. Tuples
 A **tuple** is a Rust's other primitive **compound type** that consists of elements that may be of *different* types.  Like arrays, tuples are of fixed size.
 
@@ -158,7 +160,7 @@ Here is a first-pass understanding of what is happening in this exercise:
 ### 2. Borrowing Variables
 In this exercise, we want to keep `vec0` valid in the scope of `main()` after "moving" its value into `fill_vec()`.
 
-Similar to *pass-by-reference* in C/C++, a different variable or scope can **borrow** a value.  The *owner* essentially allows another variable, the *borrower*, to access its owned value, but the borrower *cannot free* the value; when the borrower goes out of scope, the value remains valid with the owner.  A borrowed value, or **reference**, is prefixed by the symbol `&`.   We already saw this when introducing slice types.
+A different variable or scope can **borrow** a value.  The *owner* essentially allows another variable, the *borrower*, to access its owned value, but the borrower *cannot free* the value; when the borrower goes out of scope, the value remains valid with the owner.  A borrowed value, or **reference**, is prefixed by the symbol `&`. We already saw this when introducing slice types. Remember, this is *not* the same as a C++ reference.
 
 As for the exercise: first, the function definition of `fill_vec()` needs to be modified to accept a borrowed vector instead:
 ```Rust
@@ -176,15 +178,15 @@ let vec = vec.clone();
 ```
 
 In summary:
-1. The *reference* to `vec0` is moved into `fill_vec()` as `vec`, which is now essentially a vector *pointer*, borrowing `vec0`'s value.
-2. The method `.clone()` is used to copy the vector pointed-to by the argument `vec` into the newly declared vector variable `vec` in the body.
-	- We can think of `let vec` as instantiating a new owner with the copied vector.
+1. The *reference* to `vec0` is moved into `fill_vec()` as `vec`; that is, `vec` hold's `vec0`'s value but does not own it.
+2. The method `.clone()` is used to copy the borrowed value in `vec` into the newly declared vector variable `vec` in the body.
+	- We can think of `let vec` as instantiating a new owner with the copied vector as its value.
 3. `vec` is moved out from the scope of `fill_vec()`.
 4. The ownership of `vec`'s value is moved to `vec1`.
 	- At this point, only `vec0` and `vec1` are valid variables: two different owners.
 
 ### 3. Moving values into Mutable Variables
-When we pass a variable into a function, we really are moving the ownership from the passed variable to the *parameter* variable.  In the previous two exercises, this was simply `vec`.  Hopefully that's not too confusing.
+When we pass a variable into a function, we really are moving the ownership from the passed variable to the *parameter* variable.  In the previous two exercises, this was simply `vec`.
 
 In the first exercise of this section, we saw that we could move an immutable value to a mutable variable:
 ```Rust 
@@ -197,6 +199,7 @@ fn fill_vec(mut vec: Vec<i32>) -> Vec<i32>
 ```
 
 This can be thought of as a shorthand to the first exercise.
+
 ### 4. Moving values out of Functions
 This exercise illustrates that returning a value from a function is really moving that value out from the function's scope.
 
@@ -210,7 +213,7 @@ A **mutable borrow** lets the borrower access the owner's value and *modify* tha
 - There can only be *one mutable borrow* of an owned value at a time.
 - A borrower ends it borrowing the last time it is used in its scope.
 
-This exercise asks to rearrange the *lifetimes* of variables so there is only one mutable borrow of `x` at a time.  
+This exercise asks to rearrange the *lifetimes* (last time a variable is used) of variables so there is only one mutable borrow of `x` at a time.  
 
 ### 6. Function Signatures
 This exercise brings together the lessons of this section, but highlights that Rust, unlike C/C++, strictly differentiates between a value and a reference to that value.
