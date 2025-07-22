@@ -55,20 +55,25 @@ The list of numeric types are:
 | `u32`    | `i32`  |
 | `u64`    | `i64`  |
 | `u128`   | `i128` |
+
 We'll come across more types as the course progresses.
+
 ### 3. Binding Values
 Variables need to be bound to a value before they can used, as in most programming languages.
+
 ### 4. Mutable Variables
 In Rust, variables are *immutable* by default: once a value is bound, it cannot be changed.  To make a variable *mutable*, we use the `mut` keyword in a variable declaration:
 ``` Rust
 let mut x = 1729;
 ```
+
 ### 5. Shadowing
 **Shadowing** allows the reuse of a variable name.  This is useful for:
 - changing a variable's type
 - reusing the same variable name
 
 To shadow, re-declare the variable with `let`.
+
 ### 6. Constants
 Constants in Rust are declared with the `const` keyword and require type annotation:
 ``` Rust
@@ -88,6 +93,7 @@ fn function_name(<parameter> : <type>) -> <return-type> {
 ```
 
 Unlike the C language, functions don't need to be declared before their use.
+
 ### 2. Parameters
 Functions can be defined with parameters.  These parameters need type annotation.
 ``` Rust
@@ -95,10 +101,13 @@ fn call_me(num:i32) {
 	...
 }
 ```
+
 ### 3. Arguments 
 Function calls require all expected arguments to be passed, with matching types.
+
 ### 4. Return Values
 A function that returns a value needs to declare the type of its return value.  This is done in its function signature.
+
 ### 5. Expressions vs Statements
 In Rust, a **statement** is a line of code that does not output a value.  An **expression** is a line of code that outputs a value.  
 
@@ -159,6 +168,7 @@ Multiple conditionals are possible using `else if`, but all branches need to ret
 ```
 
 The above *does not compile* because the first and last branches return a `String` and the second returns a number.
+
 ### 3. Conditionals Continued
 When returning a number from a multi-branch if-else, all numbers from each branch need to be of the same type: no mixing of floats and unsigned/signed.
 
@@ -166,5 +176,6 @@ Also note that an if-else can be used to bind a value to a variable:
 ``` Rust
 let identifier = if animal == "crab" { } ...
 ```
+
 ## Quiz 1
 Putting everything we learned so far together.
